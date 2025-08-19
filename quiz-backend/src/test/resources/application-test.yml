@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: quiz-backend-test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  h2:
+    console:
+      enabled: false
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  cache:
+    type: simple
+
+# OpenAI Configuration for testing
+openai:
+  api-key: test-api-key-for-integration-tests
+  model: gpt-4o-mini
+  base-url: https://api.openai.com/v1
+
+# Server Configuration
+server:
+  port: 0  # Random port for tests
+
+# Logging
+logging:
+  level:
+    com.entrata.quiz: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
