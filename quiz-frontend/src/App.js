@@ -13,6 +13,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleQuizGenerated = (quiz) => {
+    console.log('Quiz generated:', quiz);
+    console.log('Quiz questions:', quiz.questions);
     setQuizData(quiz);
     setUserAnswers({});
     setCurrentView('quiz');
@@ -22,8 +24,27 @@ function App() {
     setUserAnswers(answers);
     
     try {
+      // Transform the frontend answers format to backend format
+      // The answers object has question IDs as keys and selected answer indices as values
+      const backendAnswers = Object.entries(answers).map(([questionId, selectedAnswerIndex]) => {
+        // Find the actual question object to get the real question ID
+        const question = quizData.questions.find(q => q.id.toString() === questionId);
+        if (!question) {
+          console.error(`Question not found for ID: ${questionId}`);
+          return null;
+        }
+        
+        return {
+          questionId: question.id, // Use the actual question ID from the question object
+          selectedAnswer: selectedAnswerIndex.toString() // Convert index to string for backend
+        };
+      }).filter(Boolean); // Remove any null entries
+      
+      console.log('Frontend answers:', answers);
+      console.log('Backend answers:', backendAnswers);
+      
       // Call the backend API to submit answers
-      const result = await quizAPI.submit(quizData.id, answers);
+      const result = await quizAPI.submit(quizData.id, backendAnswers);
       setScoreData(result);
       setCurrentView('score');
     } catch (error) {
@@ -32,12 +53,13 @@ function App() {
       
       // Fallback to mock data if API fails
       const mockScore = {
-        score: Math.floor(Math.random() * 100),
+        score: Math.min(Math.floor(Math.random() * quizData.questions.length), quizData.questions.length),
         totalQuestions: quizData.questions.length,
         feedback: quizData.questions.map((q, index) => ({
           questionIndex: index,
           correct: Math.random() > 0.5,
-          explanation: `This is feedback for question ${index + 1}`
+          explanation: `This is feedback for question ${index + 1}`,
+          correctAnswer: q.options[Math.floor(Math.random() * q.options.length)] // Random correct answer from options
         }))
       };
       setScoreData(mockScore);

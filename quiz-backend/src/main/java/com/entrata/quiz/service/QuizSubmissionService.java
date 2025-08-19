@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,7 +25,7 @@ public class QuizSubmissionService {
     private final QuizAttemptRepository quizAttemptRepository;
     
     @Transactional
-    public QuizResultResponse submitQuiz(QuizSubmissionRequest request) {
+    public QuizAttempt submitQuizAndReturnAttempt(QuizSubmissionRequest request) {
         log.info("Processing quiz submission for quiz ID: {} by user: {}", 
                 request.getQuizId(), request.getUserName());
         
@@ -31,31 +33,48 @@ public class QuizSubmissionService {
         Quiz quiz = quizRepository.findById(request.getQuizId())
                 .orElseThrow(() -> new RuntimeException("Quiz not found with ID: " + request.getQuizId()));
         
+        log.info("Quiz found with {} questions", quiz.getQuestions().size());
+        
         // Process answers and calculate score
         List<QuestionResponse> questionResponses = new ArrayList<>();
         int score = 0;
         
         for (QuizSubmissionRequest.QuestionAnswer answer : request.getAnswers()) {
+            log.info("Processing answer: questionId={}, selectedAnswer={}", 
+                    answer.getQuestionId(), answer.getSelectedAnswer());
+            
             Question question = quiz.getQuestions().stream()
                     .filter(q -> q.getId().equals(answer.getQuestionId()))
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Question not found with ID: " + answer.getQuestionId()));
             
-            boolean isCorrect = answer.getSelectedAnswer().equals(question.getCorrectAnswer());
+            // Get the selected answer text from the option index
+            String selectedAnswerText = getOptionTextByIndex(question, answer.getSelectedAnswer());
+            log.info("Question: '{}', Selected: '{}', Correct: '{}', Options: {}", 
+                    question.getQuestionText(), selectedAnswerText, question.getCorrectAnswer(), 
+                    question.getOptions().stream().map(opt -> opt.getOptionText()).collect(Collectors.toList()));
+            
+            // Compare the actual option text with the correct answer
+            boolean isCorrect = selectedAnswerText.equals(question.getCorrectAnswer());
             if (isCorrect) {
                 score++;
+                log.info("Answer CORRECT - Score incremented to: {}", score);
+            } else {
+                log.info("Answer INCORRECT - Score remains: {}", score);
             }
             
             // Create question response
             QuestionResponse questionResponse = QuestionResponse.builder()
                     .question(question)
-                    .selectedAnswer(answer.getSelectedAnswer())
+                    .selectedAnswer(selectedAnswerText)
                     .isCorrect(isCorrect)
-                    .feedback(generateFeedback(question, answer.getSelectedAnswer()))
+                    .feedback(generateFeedback(question, selectedAnswerText))
                     .build();
             
             questionResponses.add(questionResponse);
         }
+        
+        log.info("Final score calculation: {}/{}", score, quiz.getQuestions().size());
         
         // Create quiz attempt
         QuizAttempt quizAttempt = QuizAttempt.builder()
@@ -74,7 +93,13 @@ public class QuizSubmissionService {
         
         log.info("Quiz submission processed. Score: {}/{}", score, quiz.getQuestions().size());
         
-        return buildQuizResultResponse(savedAttempt, quiz);
+        return savedAttempt;
+    }
+    
+    @Transactional
+    public QuizResultResponse submitQuiz(QuizSubmissionRequest request) {
+        QuizAttempt attempt = submitQuizAndReturnAttempt(request);
+        return buildQuizResultResponse(attempt, attempt.getQuiz());
     }
     
     private String generateFeedback(Question question, String selectedAnswer) {
@@ -83,6 +108,23 @@ public class QuizSubmissionService {
         } else {
             return String.format("Incorrect. You selected '%s', but the correct answer is '%s'. %s", 
                     selectedAnswer, question.getCorrectAnswer(), question.getExplanation());
+        }
+    }
+    
+    /**
+     * Helper method to get the option text by index
+     * The selectedAnswer comes as a string representing the option index
+     */
+    private String getOptionTextByIndex(Question question, String selectedAnswer) {
+        try {
+            int optionIndex = Integer.parseInt(selectedAnswer);
+            if (optionIndex < 0 || optionIndex >= question.getOptions().size()) {
+                throw new RuntimeException("Invalid option index: " + optionIndex);
+            }
+            return question.getOptions().get(optionIndex).getOptionText();
+        } catch (NumberFormatException e) {
+            // If it's not a number, assume it's already the answer text
+            return selectedAnswer;
         }
     }
     
@@ -101,6 +143,32 @@ public class QuizSubmissionService {
                         .map(this::mapToQuestionResult)
                         .collect(Collectors.toList()))
                 .build();
+    }
+    
+    /**
+     * Create a frontend-compatible response format
+     */
+    public Map<String, Object> buildFrontendResponse(QuizAttempt attempt, Quiz quiz) {
+        double percentage = (double) attempt.getScore() / attempt.getTotalQuestions() * 100;
+        
+        // Create feedback array in the format frontend expects
+        List<Map<String, Object>> feedback = attempt.getResponses().stream()
+                .map(response -> {
+                    Map<String, Object> feedbackItem = new HashMap<>();
+                    feedbackItem.put("questionIndex", response.getQuestion().getQuestionNumber() - 1); // Convert to 0-based index
+                    feedbackItem.put("correct", response.getIsCorrect());
+                    feedbackItem.put("explanation", response.getFeedback());
+                    feedbackItem.put("correctAnswer", response.getQuestion().getCorrectAnswer()); // Add correct answer
+                    return feedbackItem;
+                })
+                .collect(Collectors.toList());
+        
+        Map<String, Object> frontendResponse = new HashMap<>();
+        frontendResponse.put("score", attempt.getScore());
+        frontendResponse.put("totalQuestions", attempt.getTotalQuestions());
+        frontendResponse.put("feedback", feedback);
+        
+        return frontendResponse;
     }
     
     private QuizResultResponse.QuestionResult mapToQuestionResult(QuestionResponse response) {

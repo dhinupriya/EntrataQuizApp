@@ -26,11 +26,12 @@ export const quizAPI = {
     }
   },
 
-  // Submit quiz answers (to be implemented when you have the endpoint)
+  // Submit quiz answers
   submit: async (quizId, answers) => {
     try {
       const response = await api.post(config.api.endpoints.quiz.submit, {
         quizId,
+        userName: "Anonymous User", // Add default username since backend requires it
         answers
       });
       return response.data;

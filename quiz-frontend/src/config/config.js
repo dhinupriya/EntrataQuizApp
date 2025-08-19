@@ -3,11 +3,11 @@ const config = {
   // Backend API configuration
   api: {
     baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080',
-    timeout: process.env.REACT_APP_API_TIMEOUT || 10000,
+    timeout: process.env.REACT_APP_API_TIMEOUT || 60000, // Increased to 60 seconds for OpenAI requests
     endpoints: {
       quiz: {
         generate: '/api/quizzes/generate',
-        submit: '/api/quizzes/submit'
+        submit: '/api/quiz-submissions/submit'  // Fixed endpoint URL
       }
     }
   },

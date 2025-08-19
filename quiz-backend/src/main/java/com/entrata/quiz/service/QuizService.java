@@ -98,6 +98,7 @@ public class QuizService {
                 .id(question.getId())
                 .questionText(question.getQuestionText())
                 .questionNumber(question.getQuestionNumber())
+                .correctAnswer(question.getCorrectAnswer()) // Add this field
                 .options(question.getOptions().stream()
                         .map(this::mapToQuestionOptionResponse)
                         .collect(Collectors.toList()))

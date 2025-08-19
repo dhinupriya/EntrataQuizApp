@@ -73,7 +73,7 @@ const ScoreDisplay = ({ scoreData, quiz, userAnswers, onNewQuiz }) => {
                     
                     {!isCorrect && (
                       <div className="correct-answer">
-                        <strong>Correct answer:</strong> {question.options[question.correctAnswer]}
+                        <strong>Correct answer:</strong> {item.correctAnswer || "Not available"}
                       </div>
                     )}
                   </div>

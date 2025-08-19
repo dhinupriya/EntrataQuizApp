@@ -24,6 +24,7 @@ public class QuizResponse {
         private String questionText;
         private List<QuestionOptionResponse> options;
         private Integer questionNumber;
+        private String correctAnswer; // Add this field
     }
     
     @Data

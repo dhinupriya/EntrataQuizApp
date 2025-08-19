@@ -12,9 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/quiz-submissions")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Quiz Submissions", description = "APIs for submitting quizzes and retrieving results")
@@ -24,13 +26,17 @@ public class QuizSubmissionController {
     
     @PostMapping("/submit")
     @Operation(summary = "Submit quiz answers", description = "Submit quiz answers and get immediate scoring and feedback")
-    public ResponseEntity<QuizResultResponse> submitQuiz(@Valid @RequestBody QuizSubmissionRequest request) {
+    public ResponseEntity<Map<String, Object>> submitQuiz(@Valid @RequestBody QuizSubmissionRequest request) {
         log.info("Received quiz submission for quiz ID: {} by user: {}", 
                 request.getQuizId(), request.getUserName());
         
-        QuizResultResponse result = quizSubmissionService.submitQuiz(request);
+        // Get the quiz attempt
+        var attempt = quizSubmissionService.submitQuizAndReturnAttempt(request);
         
-        return ResponseEntity.ok(result);
+        // Return frontend-compatible format
+        Map<String, Object> frontendResponse = quizSubmissionService.buildFrontendResponse(attempt, attempt.getQuiz());
+        
+        return ResponseEntity.ok(frontendResponse);
     }
     
     @GetMapping("/user/{userName}/history")
