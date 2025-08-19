@@ -1,0 +1,76 @@
+.App {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.quiz-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.quiz-form h2 {
+  color: #2c3e50;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.quiz-display {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.quiz-title {
+  color: #2c3e50;
+  margin: 0;
+}
+
+.quiz-progress {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.quiz-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.score-display {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.feedback-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .form-actions,
+  .quiz-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .quiz-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+}

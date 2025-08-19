@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: quiz-backend
+  
+  datasource:
+    url: jdbc:h2:mem:quizdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  cache:
+    type: simple
+
+# OpenAI Configuration
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  model: gpt-4o-mini
+  base-url: https://api.openai.com/v1
+
+# Server Configuration
+server:
+  port: 8080
+
+# Logging
+logging:
+  level:
+    com.entrata.quiz: DEBUG
+    org.springframework.web: DEBUG

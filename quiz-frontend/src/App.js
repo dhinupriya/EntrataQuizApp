@@ -1,0 +1,101 @@
+import React, { useState } from 'react';
+import QuizForm from './components/QuizForm';
+import QuizDisplay from './components/QuizDisplay';
+import ScoreDisplay from './components/ScoreDisplay';
+import { quizAPI } from './services/api';
+import './App.css';
+
+function App() {
+  const [currentView, setCurrentView] = useState('form'); // 'form', 'quiz', 'score'
+  const [quizData, setQuizData] = useState(null);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [scoreData, setScoreData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleQuizGenerated = (quiz) => {
+    setQuizData(quiz);
+    setUserAnswers({});
+    setCurrentView('quiz');
+  };
+
+  const handleQuizSubmitted = async (answers) => {
+    setUserAnswers(answers);
+    
+    try {
+      // Call the backend API to submit answers
+      const result = await quizAPI.submit(quizData.id, answers);
+      setScoreData(result);
+      setCurrentView('score');
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      alert('Failed to submit quiz. Please try again.');
+      
+      // Fallback to mock data if API fails
+      const mockScore = {
+        score: Math.floor(Math.random() * 100),
+        totalQuestions: quizData.questions.length,
+        feedback: quizData.questions.map((q, index) => ({
+          questionIndex: index,
+          correct: Math.random() > 0.5,
+          explanation: `This is feedback for question ${index + 1}`
+        }))
+      };
+      setScoreData(mockScore);
+      setCurrentView('score');
+    }
+  };
+
+  const handleNewQuiz = () => {
+    setCurrentView('form');
+    setQuizData(null);
+    setUserAnswers({});
+    setScoreData(null);
+  };
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'form':
+        return (
+          <QuizForm 
+            onQuizGenerated={handleQuizGenerated}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+          />
+        );
+      case 'quiz':
+        return (
+          <QuizDisplay 
+            quiz={quizData}
+            onSubmit={handleQuizSubmitted}
+            onBack={handleNewQuiz}
+          />
+        );
+      case 'score':
+        return (
+          <ScoreDisplay 
+            scoreData={scoreData}
+            quiz={quizData}
+            userAnswers={userAnswers}
+            onNewQuiz={handleNewQuiz}
+          />
+        );
+      default:
+        return <QuizForm onQuizGenerated={handleQuizGenerated} />;
+    }
+  };
+
+  return (
+    <div className="App">
+      <div className="header">
+        <h1>🎯 Quiz Generator</h1>
+        <p>AI-powered quizzes on any topic you choose</p>
+      </div>
+      
+      <div className="container">
+        {renderCurrentView()}
+      </div>
+    </div>
+  );
+}
+
+export default App;
