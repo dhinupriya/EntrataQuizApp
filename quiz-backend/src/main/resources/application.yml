@@ -10,7 +10,7 @@ spring:
   
   h2:
     console:
-      enabled: true
+      enabled: false  # Disabled for security
       path: /h2-console
   
   jpa:
