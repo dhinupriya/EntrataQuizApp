@@ -10,6 +10,40 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor to include auth headers from global axios defaults
+api.interceptors.request.use(
+  (config) => {
+    // Copy authorization header from global axios defaults if it exists
+    if (axios.defaults.headers.common['Authorization']) {
+      config.headers['Authorization'] = axios.defaults.headers.common['Authorization'];
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle authentication errors
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear stored credentials on 401 error
+      localStorage.removeItem('quiz_auth_credentials');
+      delete axios.defaults.headers.common['Authorization'];
+      
+      // Redirect to login if not already on login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Quiz API endpoints
 export const quizAPI = {
   // Generate a new quiz
@@ -27,11 +61,11 @@ export const quizAPI = {
   },
 
   // Submit quiz answers
-  submit: async (quizId, answers) => {
+  submit: async (quizId, answers, userName = "Anonymous User") => {
     try {
       const response = await api.post(config.api.endpoints.quiz.submit, {
         quizId,
-        userName: "Anonymous User", // Add default username since backend requires it
+        userName,
         answers
       });
       return response.data;

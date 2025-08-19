@@ -1,16 +1,38 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Login from './components/Login';
+import Header from './components/Header';
 import QuizForm from './components/QuizForm';
 import QuizDisplay from './components/QuizDisplay';
 import ScoreDisplay from './components/ScoreDisplay';
 import { quizAPI } from './services/api';
 import './App.css';
 
-function App() {
+// Main App component wrapped with authentication
+function AppContent() {
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const [currentView, setCurrentView] = useState('form'); // 'form', 'quiz', 'score'
   const [quizData, setQuizData] = useState(null);
   const [userAnswers, setUserAnswers] = useState({});
   const [scoreData, setScoreData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Show loading spinner while checking authentication
+  if (authLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <Login />;
+  }
 
   const handleQuizGenerated = (quiz) => {
     console.log('Quiz generated:', quiz);
@@ -43,8 +65,8 @@ function App() {
       console.log('Frontend answers:', answers);
       console.log('Backend answers:', backendAnswers);
       
-      // Call the backend API to submit answers
-      const result = await quizAPI.submit(quizData.id, backendAnswers);
+      // Call the backend API to submit answers with username
+      const result = await quizAPI.submit(quizData.id, backendAnswers, user?.username || 'Anonymous User');
       setScoreData(result);
       setCurrentView('score');
     } catch (error) {
@@ -108,15 +130,21 @@ function App() {
 
   return (
     <div className="App">
-      <div className="header">
-        <h1>🎯 Quiz Generator</h1>
-        <p>AI-powered quizzes on any topic you choose</p>
-      </div>
+      <Header />
       
       <div className="container">
         {renderCurrentView()}
       </div>
     </div>
+  );
+}
+
+// Main App component with AuthProvider
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
