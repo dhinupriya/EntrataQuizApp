@@ -56,50 +56,41 @@ public class OpenAiService {
     private String buildPrompt(QuizGenerationRequest request) {
         return String.format("""
             Create a quiz with exactly 5 multiple choice questions about: %s
-            
-            CRITICAL REQUIREMENTS FOR CONSISTENCY:
-            1. The CORRECT answer must ALWAYS be one of the exact option texts (A, B, C, or D content)
-            2. The EXPLANATION must support and validate the CORRECT answer you specified
-            3. For code questions: Work through the code step-by-step in the explanation to verify your answer
-            4. For factual questions: Ensure the explanation clearly states why the correct option is right
-            5. Double-check that your CORRECT field matches exactly with one of your A/B/C/D options
-            
-            QUALITY STANDARDS:
-            - Questions should be clear, unambiguous, and technically accurate
-            - Options should be plausible but only one should be definitively correct
-            - Explanations should be educational and help users understand the concept
-            - For programming questions, show your work step-by-step
-            
+
             Format your response exactly like this:
-            
+
             TITLE: [Quiz Title]
             DESCRIPTION: [Brief description]
-            
+
             QUESTION 1:
             [Question text]
             A) [Option A]
             B) [Option B]
             C) [Option C]
             D) [Option D]
-            CORRECT: [A, B, C, or D - must match one of the options above exactly]
-            EXPLANATION: [Step-by-step reasoning that proves the CORRECT answer is right]
-            
+            CORRECT: [A, B, C, or D]
+            EXPLANATION: [Why this is correct]
+
             QUESTION 2:
             [Question text]
             A) [Option A]
             B) [Option B]
             C) [Option C]
             D) [Option D]
-            CORRECT: [A, B, C, or D - must match one of the options above exactly]
-            EXPLANATION: [Step-by-step reasoning that proves the CORRECT answer is right]
-            
+            CORRECT: [A, B, C, or D]
+            EXPLANATION: [Why this is correct]
+
             Continue for all 5 questions. Each question must have exactly 4 options labeled A, B, C, D, and exactly one correct answer.
-            
-            VALIDATION CHECKLIST (verify before responding):
-            ✓ Each CORRECT answer corresponds to exactly one A/B/C/D option
-            ✓ Each EXPLANATION supports the specified CORRECT answer
-            ✓ All code examples are syntactically correct and produce the stated output
-            ✓ All factual statements are accurate
+
+            CRITICAL REQUIREMENTS:
+            - The CORRECT answer MUST be one of the provided options (A, B, C, or D) and match its text EXACTLY.
+            - The EXPLANATION MUST clearly and accurately support the CORRECT answer.
+            - For programming code questions, the explanation MUST include a step-by-step breakdown of how the code evaluates to the correct answer.
+
+            QUALITY STANDARDS:
+            - Questions should be clear, unambiguous, and directly related to the topic.
+            - Options should be plausible but only one should be definitively correct.
+            - Explanations should be educational, concise, and easy to understand.
             """, request.getTopic());
     }
     
