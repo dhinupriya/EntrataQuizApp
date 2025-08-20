@@ -4,7 +4,7 @@ A modern, responsive React application for generating and taking AI-powered quiz
 
 ## ✨ Features
 
-- **AI-Powered Quiz Generation**: Create quizzes on any topic with just a topic and description
+- **AI-Powered Quiz Generation**: Create quizzes on any topic with just a topic input
 - **Interactive Quiz Interface**: Beautiful, responsive design with smooth navigation
 - **Real-time Progress Tracking**: Visual progress bar and question navigation
 - **Comprehensive Scoring**: Detailed feedback and explanations for each question
@@ -18,6 +18,13 @@ A modern, responsive React application for generating and taking AI-powered quiz
 - Node.js (version 14 or higher)
 - npm or yarn
 - Backend API running on `http://localhost:8080`
+
+### UI Features
+
+- **Simplified Form**: Single topic input field for faster quiz generation
+- **Clean Interface**: No unnecessary fields or buttons
+- **Streamlined UX**: Focus on essential functionality
+- **Mobile Optimized**: Responsive design for all devices
 
 ### Installation
 
@@ -52,8 +59,7 @@ The application expects the following backend endpoints:
    Content-Type: application/json
    
    {
-     "topic": "JavaScript Fundamentals",
-     "description": "Basic concepts of JavaScript programming"
+     "topic": "JavaScript Fundamentals"
    }
    ```
 
@@ -104,6 +110,7 @@ src/
 
 ## 🎨 Design Features
 
+- **Simplified Interface**: Clean, single-input form for faster quiz generation
 - **Gradient Backgrounds**: Modern gradient color schemes
 - **Card-based Layout**: Clean, organized information display
 - **Smooth Animations**: Hover effects and transitions
@@ -161,6 +168,8 @@ If you encounter any issues or have questions:
 2. Verify your backend API is running and accessible
 3. Ensure all dependencies are properly installed
 4. Check the network tab for API call failures
+5. Use the simplified form - only topic input is required
+6. Backend must be running on the configured port for real quiz generation
 
 ## 🔮 Future Enhancements
 
@@ -170,3 +179,6 @@ If you encounter any issues or have questions:
 - [ ] Quiz templates and categories
 - [ ] Performance analytics and insights
 - [ ] Offline support with service workers
+- [ ] Quiz difficulty levels
+- [ ] Time-based quizzes
+- [ ] Quiz export functionality

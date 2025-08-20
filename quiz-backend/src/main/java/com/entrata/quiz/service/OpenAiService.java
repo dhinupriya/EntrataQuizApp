@@ -1,6 +1,7 @@
 package com.entrata.quiz.service;
 
 import com.entrata.quiz.config.OpenAiConfig;
+import com.entrata.quiz.config.RagConfig;
 import com.entrata.quiz.dto.QuizGenerationRequest;
 import com.entrata.quiz.entity.Question;
 import com.entrata.quiz.entity.QuestionOption;
@@ -22,7 +23,9 @@ import java.util.regex.Pattern;
 public class OpenAiService {
     
     private final OpenAiConfig openAiConfig;
+    private final RagConfig ragConfig;
     private final WebClient webClient;
+    private final RetrievalService retrievalService;
     
     public Quiz generateQuiz(QuizGenerationRequest request) {
         try {
@@ -44,17 +47,49 @@ public class OpenAiService {
             
             log.info("Generating quiz for topic: {} using model: {}", request.getTopic(), openAiConfig.getModel());
             
-            String prompt = buildPrompt(request);
+            // Retrieve context if RAG is enabled
+            RetrievalService.RetrievalContext context = null;
+            if (ragConfig.isEnabled() && ragConfig.getWikipedia().isEnabled()) {
+                if (retrievalService.shouldUseRetrieval(request.getTopic())) {
+                    log.info("Using RAG for topic: {}", request.getTopic());
+                    try {
+                        context = retrievalService.retrieveContext(request.getTopic());
+                    } catch (Exception e) {
+                        log.warn("RAG retrieval failed, falling back to standard generation", e);
+                        if (!ragConfig.getRetrieval().isFallbackOnError()) {
+                            throw new RuntimeException("Failed to retrieve context: " + e.getMessage());
+                        }
+                    }
+                } else {
+                    log.info("Topic '{}' does not benefit from RAG, using standard generation", request.getTopic());
+                }
+            }
+            
+            String prompt = buildPrompt(request, context);
             String response = callOpenAi(prompt);
-            return parseQuizResponse(response, request);
+            Quiz quiz = parseQuizResponse(response, request);
+            
+            // Add source attribution if context was used
+            if (context != null && context.hasContent()) {
+                addSourceAttribution(quiz, context);
+            }
+            
+            return quiz;
         } catch (Exception e) {
             log.error("Error generating quiz for topic: {}", request.getTopic(), e);
             throw new RuntimeException("Failed to generate quiz: " + e.getMessage(), e);
         }
     }
     
-    private String buildPrompt(QuizGenerationRequest request) {
-        return String.format("""
+    private String buildPrompt(QuizGenerationRequest request, RetrievalService.RetrievalContext context) {
+        StringBuilder promptBuilder = new StringBuilder();
+        
+        // Add context if available
+        if (context != null && context.hasContent()) {
+            promptBuilder.append(context.getContextForPrompt()).append("\n");
+        }
+        
+        promptBuilder.append(String.format("""
             Create a quiz with exactly 5 multiple choice questions about: %s
 
             Format your response exactly like this:
@@ -91,7 +126,22 @@ public class OpenAiService {
             - Questions should be clear, unambiguous, and directly related to the topic.
             - Options should be plausible but only one should be definitively correct.
             - Explanations should be educational, concise, and easy to understand.
-            """, request.getTopic());
+            """, request.getTopic()));
+        
+        return promptBuilder.toString();
+    }
+    
+    private void addSourceAttribution(Quiz quiz, RetrievalService.RetrievalContext context) {
+        // Log sources for debugging but don't add to UI
+        if (!context.getSources().isEmpty()) {
+            log.info("Quiz generated using {} sources: {}", 
+                context.getSources().size(),
+                context.getSources().stream()
+                    .map(source -> source.getTitle() + " (" + source.getType() + ")")
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse(""));
+        }
+        // No longer adding source attribution to quiz description for UI
     }
     
     private String callOpenAi(String prompt) {

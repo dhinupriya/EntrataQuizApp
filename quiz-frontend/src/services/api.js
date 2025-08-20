@@ -47,11 +47,10 @@ api.interceptors.response.use(
 // Quiz API endpoints
 export const quizAPI = {
   // Generate a new quiz
-  generate: async (topic, description) => {
+  generate: async (topic) => {
     try {
       const response = await api.post(config.api.endpoints.quiz.generate, {
-        topic,
-        description
+        topic
       });
       return response.data;
     } catch (error) {

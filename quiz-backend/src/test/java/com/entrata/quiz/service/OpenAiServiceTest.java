@@ -1,6 +1,7 @@
 package com.entrata.quiz.service;
 
 import com.entrata.quiz.config.OpenAiConfig;
+import com.entrata.quiz.config.RagConfig;
 import com.entrata.quiz.dto.QuizGenerationRequest;
 import com.entrata.quiz.entity.Quiz;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,12 @@ class OpenAiServiceTest {
     @Mock
     private OpenAiConfig openAiConfig;
 
+    @Mock
+    private RagConfig ragConfig;
+
+    @Mock
+    private RetrievalService retrievalService;
+
     @InjectMocks
     private OpenAiService openAiService;
 
@@ -51,6 +58,9 @@ class OpenAiServiceTest {
         when(openAiConfig.getApiKey()).thenReturn("test-api-key");
         when(openAiConfig.getModel()).thenReturn("gpt-4o-mini");
         when(openAiConfig.getBaseUrl()).thenReturn("https://api.openai.com/v1");
+        
+        // Mock RAG config to be disabled for unit tests
+        when(ragConfig.isEnabled()).thenReturn(false);
 
         sampleOpenAiResponse = """
             {

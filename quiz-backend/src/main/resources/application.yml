@@ -31,6 +31,23 @@ openai:
   model: gpt-4o-mini
   base-url: https://api.openai.com/v1
 
+# RAG (Retrieval-Augmented Generation) Configuration
+rag:
+  enabled: true
+  wikipedia:
+    enabled: true
+    max-articles: 3
+    max-content-length: 2000
+  retrieval:
+    timeout-seconds: 10
+    fallback-on-error: true
+
+# Google Search Configuration (Optional - for better results)
+google:
+  search:
+    api-key: ${GOOGLE_SEARCH_API_KEY:}
+    cx: ${GOOGLE_SEARCH_CX:}
+
 # Server Configuration
 server:
   port: 8080
