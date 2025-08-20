@@ -18,8 +18,6 @@ The frontend is built with **React 18** using modern hooks and context patterns 
 - 🧠 **Retrieval-Augmented Generation** - Enhanced accuracy with Wikipedia integration
 - 🔐 **User Authentication** - Secure login with role-based access control
 - 📊 **Real-time Scoring** - Instant feedback with detailed explanations
-- 📈 **Progress Tracking** - Quiz history and performance analytics
-- 🎯 **Comprehensive Testing** - 67 tests with 54% line coverage
 - ⚡ **Modern Tech Stack** - Spring Boot 3, React 18, Java 17
 
 ## Quick Start
